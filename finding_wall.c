@@ -1,12 +1,12 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define BOX_SIZE 64
 
 #define PLAYER_Y 224
 #define PLAYER_X 224
-#define PLAYER_POV 300
 
 #define ALTURA 7
 #define LARGURA 7
@@ -48,6 +48,8 @@ typedef struct s_hit
 {
 	int		distance;
 	char	side;
+	int		x;
+	int		y;
 } t_hit;
 
 t_hitbox	next_hhitbox (int angle) // Needs work
@@ -144,7 +146,7 @@ char	v_side(int y_coordinate)
 	return ('N');
 }
 
-t_hit	h_ray(int angle)
+t_hit	h_ray(int angle, int player_pov)
 {
 	t_hitbox	hitbox;
 	t_point		point;
@@ -158,12 +160,15 @@ t_hit	h_ray(int angle)
 		return (hit);
 	hit.distance = abs(PLAYER_Y - point.y) / sin(radians(angle));
 	hit.side = v_side(point.y);
-	int b_angle = angle - PLAYER_POV; // Turn into function
+	hit.x = point.x / 64;
+	hit.y = point.y / 64;
+	int b_angle = angle - player_pov; // Turn into function
 	hit.distance = hit.distance * cos(radians(b_angle));
+	hit.distance = abs(hit.distance);
 	return (hit);
 }
 
-t_hit	v_ray(int angle)
+t_hit	v_ray(int angle, int player_pov)
 {
 	t_hitbox	hitbox;
 	t_point		point;
@@ -177,22 +182,27 @@ t_hit	v_ray(int angle)
 		return (hit);
 	hit.distance = abs(PLAYER_X - point.x) / cos(radians(angle));
 	hit.side = h_side(point.x);
-	int b_angle = angle - PLAYER_POV; // Turn into function
+	hit.x = point.x / 64;
+	hit.y = point.y / 64;
+	int b_angle = angle - player_pov; // Turn into function
 	hit.distance = hit.distance * cos(radians(b_angle));
+	hit.distance = abs(hit.distance);
 	return (hit);
 }
 
-t_hit	raycast(int direction)
+t_hit	raycast(int direction, int player_pov)
 {
 	t_hit	horizontal;
 	t_hit	vertical;
 
+	if (direction < 0)
+		direction = 360 + direction;
+	if (player_pov < 0)
+		player_pov = 360 + player_pov;
 	horizontal.distance = -1;
 	vertical.distance = -1;
-	if (direction != 0 && direction != 180) // Remove
-		horizontal = h_ray(direction);
-	if (direction != 90 && direction != 270) // Remove
-		vertical = v_ray(direction);
+	horizontal = h_ray(direction, player_pov);
+	vertical = v_ray(direction, player_pov);
 	if (horizontal.distance == OUT_OF_LIMITS)
 		return (vertical);
 	if (vertical.distance == OUT_OF_LIMITS)
@@ -204,11 +214,23 @@ t_hit	raycast(int direction)
 
 int main (void)
 {
-	int	direction;
+	int pov;
 	t_hit	hit;
 
-	direction = 270;
-	hit = raycast(direction);
-	printf("Distance: %d\n", hit.distance);
-	printf("Side: %c\n", hit.side);
+	pov = 30;
+	while (pov >= -360)
+	{
+		printf("\033c");
+		hit = raycast(pov - 30, pov);
+		printf("Pov: %d\n", pov);
+		printf("Direction: %d\n", pov - 30);
+		printf("Distance: %d\n", hit.distance);
+		printf("Side: %c\n", hit.side);
+		printf("Y: %d - X: %d\n", hit.y, hit.x);
+		printf("=====================================\n");
+		pov--;
+		usleep(500000);
+		if (pov == -360)
+			pov = 0;
+	}
 }
