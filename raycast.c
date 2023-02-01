@@ -1,7 +1,4 @@
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "raycast.h"
 
 #define BOX_SIZE 64
 
@@ -212,12 +209,14 @@ t_hit	raycast(int direction, int player_pov)
 	return (horizontal);
 }
 
-int main (void)
+int	main(int argc, char **argv)
 {
+
 	int pov;
 	float direction;
 	t_hit	hit;
-
+	t_screen	screen;
+	/*
 	float angle_rays = 60 / 320.0;
 	printf("Angle: %f", angle_rays);
 	pov = 30;
@@ -240,4 +239,9 @@ int main (void)
 		i++;
 		usleep(500000);
 	}
+	*/
+	screen = load_mlx(1280, 720);
+	load_hooks(&screen);
+	mlx_loop(screen.mlx);
+	return (0);
 }
