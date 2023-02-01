@@ -215,22 +215,29 @@ t_hit	raycast(int direction, int player_pov)
 int main (void)
 {
 	int pov;
+	float direction;
 	t_hit	hit;
 
+	float angle_rays = 60 / 320.0;
+	printf("Angle: %f", angle_rays);
 	pov = 30;
-	while (pov >= -360)
+	direction = 0;
+	int i = 0;
+	while (direction <= 60)
 	{
 		printf("\033c");
-		hit = raycast(pov - 30, pov);
+		hit = raycast(direction, pov);
+		int height = 64 / (float)hit.distance * 277; // Round up
+		printf("Ray: %d\n", i);
+		printf("Height: %d\n", height);
 		printf("Pov: %d\n", pov);
-		printf("Direction: %d\n", pov - 30);
+		printf("Direction: %f\n", direction);
 		printf("Distance: %d\n", hit.distance);
 		printf("Side: %c\n", hit.side);
 		printf("Y: %d - X: %d\n", hit.y, hit.x);
 		printf("=====================================\n");
-		pov--;
+		direction += angle_rays;
+		i++;
 		usleep(500000);
-		if (pov == -360)
-			pov = 0;
 	}
 }
