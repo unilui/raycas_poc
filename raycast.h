@@ -6,6 +6,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
+enum	e_wall
+{
+	W_NORTH,
+	W_SOUTH,
+	W_WEST,
+	W_EAST,
+	W_COUNT,
+};
+
 typedef union u_color
 {
 	int		color;
@@ -14,11 +23,13 @@ typedef union u_color
 
 typedef struct s_img
 {
-	void		*mlx_img;
-	char		*addr;
-	int			bpp;
-	int			line_len;
-	int			endian;
+	void	*mlx_img;
+	char	*addr;
+	int		bpp;
+	int		line_len;
+	int		endian;
+	int		width;
+	int		height;
 }	t_img;
 
 typedef struct s_screen
@@ -26,6 +37,7 @@ typedef struct s_screen
 	void		*mlx;
 	void		*window;
 	t_img		img;
+	t_img		walls[W_COUNT];
 }	t_screen;
 
 
