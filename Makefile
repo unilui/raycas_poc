@@ -21,6 +21,7 @@ clean:
 
 fclean:
 			@$(RM) $(NAME)
+			@$(RM) $(OBJS_DIR)
 
 re:			fclean all
 
