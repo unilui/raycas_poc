@@ -226,38 +226,46 @@ int	rgb_encode(short int red, short int green, short int blue)
 	return (color.color);
 }
 
-int	what_im_doing(t_img *img, int color) // Also known as raycast
+int	what_im_doing(t_img *img, int player_pov) // Also known as raycast
 {
-	int pov;
 	float direction;
 	t_hit	hit;
 	t_screen	screen;
 
-	float angle_rays = 60 / 320.0;
-	printf("Angle: %f", angle_rays);
-	pov = 45;
-	direction = 75;
+	float angle_rays = 60 / 1280.0;
+	printf("Angle: %f", angle_rays); // Need fix that messy
+	direction = player_pov + 30;
+	int projection_distance = 720.0 / tan(radians(30));
 	int i = 0;
-	while (direction >= 15)
+	while (direction >= player_pov - 30)
 	{
-		printf("\033c");
-		hit = raycast(direction, pov);
-		int height = 64 / (float)hit.distance * 277; // Round up
-		int j = 100 - (height / 2);
+		//printf("\033c");
+		hit = raycast(direction, player_pov);
+		int height = 64 / (float)hit.distance * projection_distance; // Round up
+		int j = 360 - (height / 2);
 		int x = 0;
 		while (x <= height)
 		{
-			pixel_put(img, i, j++, color);
+			if (hit.side == 'S') // Inefficient logic
+				pixel_put(img, i, j++, rgb_encode(0, 0, 150)); // Precompute
+			else if (hit.side == 'W')
+				pixel_put(img, i, j++, rgb_encode(0, 150, 0));  // Precompute
+			else if (hit.side == 'E')
+				pixel_put(img, i, j++, rgb_encode(150, 0, 0));  // Precompute
+			else if (hit.side == 'N')
+				pixel_put(img, i, j++, rgb_encode(150, 150, 0)); // Precompute
 			x++;
 		}
+		/*
 		printf("Ray: %d\n", i);
 		printf("Height: %d\n", height);
-		printf("Pov: %d\n", pov);
+		printf("Pov: %d\n", player_pov);
 		printf("Direction: %f\n", direction);
 		printf("Distance: %d\n", hit.distance);
 		printf("Side: %c\n", hit.side);
 		printf("Y: %d - X: %d\n", hit.y, hit.x);
 		printf("=====================================\n");
+		*/
 		direction -= angle_rays;
 		i++;
 		//usleep(500000);
@@ -268,11 +276,16 @@ int	what_im_doing(t_img *img, int color) // Also known as raycast
 
 int	render(t_screen *screen)
 {
-	//background(&screen->img, rgb_encode(0, 0, 0));
-	what_im_doing(&screen->img, rgb_encode(0, 0, 150));
+	volatile static int player_pov;
+	usleep(200000);
+	background(&screen->img, rgb_encode(0, 0, 0));
+	what_im_doing(&screen->img, player_pov);
 	mlx_put_image_to_window(
 		screen->mlx,
 		screen->window,
 		screen->img.mlx_img, 0, 0);
+	player_pov++;
+	if (player_pov == 360 || player_pov == -360)
+		player_pov = 0;
 	return (0);
 }

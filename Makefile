@@ -1,4 +1,4 @@
-SRCS 		= background.c raycast.c load_hooks.c load_mlx.c render.c
+SRCS 		= background.c raycast.c load_hooks.c load_mlx.c render.c exit_raycast.c
 
 OBJS		=	${SRCS:%.c=$(OBJS_DIR)%.o}
 OBJS_DIR	=	objects/
