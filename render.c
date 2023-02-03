@@ -233,15 +233,15 @@ int	what_im_doing(t_img *img, int player_pov) // Also known as raycast
 	t_screen	screen;
 
 	float angle_rays = 60 / 1280.0;
-	printf("Angle: %f", angle_rays); // Need fix that messy
+	//printf("Angle: %f", angle_rays); // Need fix that messy
 	direction = player_pov + 30;
 	int projection_distance = 720.0 / tan(radians(30));
 	int i = 0;
-	while (direction >= player_pov - 30)
+	while (direction > (player_pov - 30.0))
 	{
 		//printf("\033c");
 		hit = raycast(direction, player_pov);
-		int height = 64 / (float)hit.distance * projection_distance; // Round up
+		int height = ceil(64 / (float)hit.distance * projection_distance); // Round up
 		int j = 360 - (height / 2);
 		int x = 0;
 		while (x <= height)
@@ -272,7 +272,6 @@ int	what_im_doing(t_img *img, int player_pov) // Also known as raycast
 	}
 	return (0);
 }
-
 
 int	render(t_screen *screen)
 {
