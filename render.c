@@ -158,8 +158,8 @@ t_hit	h_ray(int angle, int player_pov)
 		return (hit);
 	hit.distance = abs(PLAYER_Y - point.y) / sin(radians(angle));
 	hit.side = v_side(point.y);
-	hit.x = point.x / BOX_SIZE;
-	hit.y = point.y / BOX_SIZE;
+	hit.x = point.x % BOX_SIZE;
+	hit.y = point.y % BOX_SIZE;
 	int b_angle = angle - player_pov; // Turn into function
 	hit.distance = hit.distance * cos(radians(b_angle));
 	hit.distance = abs(hit.distance);
@@ -180,8 +180,8 @@ t_hit	v_ray(int angle, int player_pov)
 		return (hit);
 	hit.distance = abs(PLAYER_X - point.x) / cos(radians(angle));
 	hit.side = h_side(point.x);
-	hit.x = point.x / BOX_SIZE;
-	hit.y = point.y / BOX_SIZE;
+	hit.x = point.x % BOX_SIZE;
+	hit.y = point.y % BOX_SIZE;
 	int b_angle = angle - player_pov; // Turn into function
 	hit.distance = hit.distance * cos(radians(b_angle));
 	hit.distance = abs(hit.distance);
@@ -227,7 +227,7 @@ int	rgb_encode(short int red, short int green, short int blue)
 	return (color.color);
 }
 
-void	wall_pixel_put(t_screen *screen, t_hit *hit, int x, int y)
+void	wall_pixel_put(t_screen *screen, t_hit *hit, int x, int y, int height)
 {
 	int		color;
 	t_img	*wall;
@@ -235,7 +235,7 @@ void	wall_pixel_put(t_screen *screen, t_hit *hit, int x, int y)
 	t_point	sprite_point;
 
 	wall = &screen->walls[hit->side];
-	scale = (float)wall->height / BOX_SIZE;
+	scale = (float)wall->height / height;
 	sprite_point = (t_point){floor(scale * hit->x), floor(scale * hit->y)};
 	color = ((int *)wall->addr)[sprite_point.y * wall->line_len + (sprite_point.x * (wall->bpp / 8))];
 	pixel_put(&screen->img, x, y, color);
@@ -260,7 +260,7 @@ int	what_im_doing(t_screen *screen, int player_pov) // Also known as raycast
 		int x = 0;
 		while (x++ < height)
 		{
-			wall_pixel_put(screen, &hit, i, j);
+			wall_pixel_put(screen, &hit, i, j, height);
 			j++;
 		}
 		/*
@@ -282,7 +282,8 @@ int	what_im_doing(t_screen *screen, int player_pov) // Also known as raycast
 
 int	render(t_screen *screen)
 {
-	volatile static int player_pov;
+	volatile static int	player_pov;
+
 	usleep(2000);
 	background(&screen->img, rgb_encode(0, 0, 0));
 	what_im_doing(screen, player_pov);
