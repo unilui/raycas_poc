@@ -6,6 +6,18 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
+
+enum	e_side
+{
+	S_NO,
+	S_SO,
+	S_WE,
+	S_EA,
+	S_COUNT,
+};
+
 typedef union u_color
 {
 	int		color;
@@ -14,11 +26,13 @@ typedef union u_color
 
 typedef struct s_img
 {
-	void		*mlx_img;
-	char		*addr;
-	int			bpp;
-	int			line_len;
-	int			endian;
+	void	*mlx_img;
+	char	*addr;
+	int		bpp;
+	int		line_len;
+	int		endian;
+	int		width;
+	int		height;
 }	t_img;
 
 typedef struct s_screen
@@ -26,6 +40,7 @@ typedef struct s_screen
 	void		*mlx;
 	void		*window;
 	t_img		img;
+	t_img		walls[S_COUNT];
 }	t_screen;
 
 

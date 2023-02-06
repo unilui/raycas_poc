@@ -1,4 +1,5 @@
 #include "raycast.h"
+#include <unistd.h>
 
 #define BOX_SIZE 64
 
@@ -37,16 +38,16 @@ typedef struct s_hitbox
 
 typedef struct s_point
 {
-	int	y;
 	int	x;
+	int	y;
 } t_point;
 
 typedef struct s_hit
 {
-	int		distance;
-	char	side;
-	int		x;
-	int		y;
+	int	distance;
+	int	side;
+	int	x;
+	int	y;
 } t_hit;
 
 t_hitbox	next_hhitbox (int angle) // Needs work
@@ -70,7 +71,7 @@ t_hitbox	next_hhitbox (int angle) // Needs work
 	}
 	hitbox.delta_y = BOX_SIZE * y_direction;
 	hitbox.delta_x = BOX_SIZE / tan(radians(angle)) * x_direction;
-	hitbox.y = floor(PLAYER_Y / BOX_SIZE) * BOX_SIZE + correction;
+	hitbox.y = floor((float)PLAYER_Y / BOX_SIZE) * BOX_SIZE + correction;
 	hitbox.x = PLAYER_X + ((PLAYER_Y - hitbox.y) / tan(radians(angle)));
 	return (hitbox);
 }
@@ -96,7 +97,7 @@ t_hitbox	next_vhitbox (int angle) // Needs work
 	}
 	hitbox.delta_x = BOX_SIZE * x_direction;
 	hitbox.delta_y = BOX_SIZE * tan(radians(angle)) * y_direction;
-	hitbox.x = floor(PLAYER_X / BOX_SIZE) * (BOX_SIZE) + correction;
+	hitbox.x = floor((float)PLAYER_X / BOX_SIZE) * (BOX_SIZE) + correction;
 	hitbox.y = PLAYER_Y + (PLAYER_X - hitbox.x) * tan(radians(angle));
 	return (hitbox);
 }
@@ -129,18 +130,18 @@ t_point cast(t_hitbox init_hitbox)
 	return (point);
 }
 
-char	h_side(int x_coordinate)
+int	h_side(int x_coordinate)
 {
 	if ((x_coordinate % BOX_SIZE) > (BOX_SIZE / 2))
-		return ('E');
-	return ('W');
+		return (S_EA);
+	return (S_WE);
 }
 
-char	v_side(int y_coordinate)
+int	v_side(int y_coordinate)
 {
 	if ((y_coordinate % BOX_SIZE) > (BOX_SIZE / 2))
-		return ('S');
-	return ('N');
+		return (S_SO);
+	return (S_NO);
 }
 
 t_hit	h_ray(int angle, int player_pov)
@@ -157,8 +158,8 @@ t_hit	h_ray(int angle, int player_pov)
 		return (hit);
 	hit.distance = abs(PLAYER_Y - point.y) / sin(radians(angle));
 	hit.side = v_side(point.y);
-	hit.x = point.x / 64;
-	hit.y = point.y / 64;
+	hit.x = point.x % BOX_SIZE;
+	hit.y = point.y % BOX_SIZE;
 	int b_angle = angle - player_pov; // Turn into function
 	hit.distance = hit.distance * cos(radians(b_angle));
 	hit.distance = abs(hit.distance);
@@ -179,8 +180,8 @@ t_hit	v_ray(int angle, int player_pov)
 		return (hit);
 	hit.distance = abs(PLAYER_X - point.x) / cos(radians(angle));
 	hit.side = h_side(point.x);
-	hit.x = point.x / 64;
-	hit.y = point.y / 64;
+	hit.x = point.x % BOX_SIZE;
+	hit.y = point.y % BOX_SIZE;
 	int b_angle = angle - player_pov; // Turn into function
 	hit.distance = hit.distance * cos(radians(b_angle));
 	hit.distance = abs(hit.distance);
@@ -226,11 +227,24 @@ int	rgb_encode(short int red, short int green, short int blue)
 	return (color.color);
 }
 
-int	what_im_doing(t_img *img, int player_pov) // Also known as raycast
+void	wall_pixel_put(t_screen *screen, t_hit *hit, int x, int y, int height)
 {
-	float direction;
+	int		color;
+	t_img	*wall;
+	float	scale;
+	t_point	sprite_point;
+
+	wall = &screen->walls[hit->side];
+	scale = (float)wall->height / height;
+	sprite_point = (t_point){floor(scale * hit->x), floor(scale * hit->y)};
+	color = ((int *)wall->addr)[sprite_point.y * wall->line_len + (sprite_point.x * (wall->bpp / 8))];
+	pixel_put(&screen->img, x, y, color);
+}
+
+int	what_im_doing(t_screen *screen, int player_pov) // Also known as raycast
+{
 	t_hit	hit;
-	t_screen	screen;
+	float	direction;
 
 	float angle_rays = 60 / 1280.0;
 	//printf("Angle: %f", angle_rays); // Need fix that messy
@@ -244,17 +258,10 @@ int	what_im_doing(t_img *img, int player_pov) // Also known as raycast
 		int height = ceil(64 / (float)hit.distance * projection_distance); // Round up
 		int j = 360 - (height / 2);
 		int x = 0;
-		while (x <= height)
+		while (x++ < height)
 		{
-			if (hit.side == 'S') // Inefficient logic
-				pixel_put(img, i, j++, rgb_encode(0, 0, 150)); // Precompute
-			else if (hit.side == 'W')
-				pixel_put(img, i, j++, rgb_encode(0, 150, 0));  // Precompute
-			else if (hit.side == 'E')
-				pixel_put(img, i, j++, rgb_encode(150, 0, 0));  // Precompute
-			else if (hit.side == 'N')
-				pixel_put(img, i, j++, rgb_encode(150, 150, 0)); // Precompute
-			x++;
+			wall_pixel_put(screen, &hit, i, j, height);
+			j++;
 		}
 		/*
 		printf("Ray: %d\n", i);
@@ -275,10 +282,11 @@ int	what_im_doing(t_img *img, int player_pov) // Also known as raycast
 
 int	render(t_screen *screen)
 {
-	volatile static int player_pov;
-	usleep(200000);
+	volatile static int	player_pov;
+
+	usleep(2000);
 	background(&screen->img, rgb_encode(0, 0, 0));
-	what_im_doing(&screen->img, player_pov);
+	what_im_doing(screen, player_pov);
 	mlx_put_image_to_window(
 		screen->mlx,
 		screen->window,
