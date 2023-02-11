@@ -46,4 +46,5 @@ void	load_hooks(t_screen *screen);
 int	render(t_screen *screen);
 int	background(t_img *img, int color);
 void	pixel_put(t_img *img, int x, int y, int color);
+int	pixel_get(t_img *img, int x, int y);
 int	exit_raycast(t_screen *screen);

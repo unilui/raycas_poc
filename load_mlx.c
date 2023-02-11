@@ -10,19 +10,21 @@ static char *walls_xpm_files[W_COUNT] = {
 
 static void	load_wall_sprite(t_screen *screen, int wall)
 {
+	t_img	*w;
 	char	*xpm_file;
 
+	w = &screen->walls[wall];
 	xpm_file = walls_xpm_files[wall];
-	screen->walls[wall].mlx_img = mlx_xpm_file_to_image(
+	w->mlx_img = mlx_xpm_file_to_image(
 			screen->mlx,
 			xpm_file,
-			&screen->walls[W_NORTH].width,
-			&screen->walls[W_NORTH].height);
-	screen->walls[wall].addr = mlx_get_data_addr(
-			screen->walls[wall].mlx_img,
-			&screen->walls[wall].bpp,
-			&screen->walls[wall].line_len,
-			&screen->walls[wall].endian);
+			&w->width,
+			&w->height);
+	w->addr = mlx_get_data_addr(
+			w->mlx_img,
+			&w->bpp,
+			&w->line_len,
+			&w->endian);
 }
 
 t_screen	load_mlx(int width, int height)
